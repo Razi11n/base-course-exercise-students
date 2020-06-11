@@ -2,9 +2,7 @@ package iaf.ofek.hadracha.base_course.web_server.EjectedPilotRescue;
 
 import iaf.ofek.hadracha.base_course.web_server.Data.InMemoryMapDataBase;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,5 +22,16 @@ public class EjectionsRestControl {
     @GetMapping("/infos")
     public List<EjectedPilotInfo> SendEjectionToClient() {
         return inMemoryMapDataBase.getAllOfType(EjectedPilotInfo.class);
+    }
+
+    @GetMapping("/takeResponsibility")
+    public void TakeResponsibility(@CookieValue (value = "client-id") String clientId, @RequestParam int ejectionId) {
+        EjectedPilotInfo ejectedPilotInfo = inMemoryMapDataBase.getByID(ejectionId, EjectedPilotInfo.class);
+
+        ejectedPilotInfo.rescuedBy = (ejectedPilotInfo.rescuedBy == null) ? clientId : ejectedPilotInfo.rescuedBy;
+
+        airplanesAllocationManager.allocateAirplanesForEjection(ejectedPilotInfo, clientId);
+        
+        inMemoryMapDataBase.update(ejectedPilotInfo);
     }
 }
