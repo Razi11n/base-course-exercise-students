@@ -44,22 +44,31 @@ public class EjectionsImporter {
         this.dataBase = dataBase;
         this.listOperations = listOperations;
         executor.scheduleAtFixedRate(this::updateEjections, 1, 1, TimeUnit.SECONDS);
+    }
 
+    private ResponseEntity<List<EjectedPilotInfo>> getServerData(){
+        return restTemplate.exchange(
+                EJECTION_SERVER_URL + "/ejections?name=" + NAMESPACE, HttpMethod.GET,
+                null, new ParameterizedTypeReference<List<EjectedPilotInfo>>() {
+                });
+    }
+
+    private  List<EjectedPilotInfo> updateLatitude(List<EjectedPilotInfo> ejectionsFromServer){
+        if (ejectionsFromServer != null) {
+            for(EjectedPilotInfo ejectedPilotInfo: ejectionsFromServer) {
+                ejectedPilotInfo.coordinates.lat += SHIFT_NORTH;
+            }
+        }
+        return ejectionsFromServer;
     }
 
     private void updateEjections() {
         try {
-            List<EjectedPilotInfo> ejectionsFromServer;
-            ResponseEntity<List<EjectedPilotInfo>> responseEntity = restTemplate.exchange(
-                    EJECTION_SERVER_URL + "/ejections?name=" + NAMESPACE, HttpMethod.GET,
-                    null, new ParameterizedTypeReference<List<EjectedPilotInfo>>() {
-                    });
-            ejectionsFromServer = responseEntity.getBody();
-            if (ejectionsFromServer != null) {
-                for(EjectedPilotInfo ejectedPilotInfo: ejectionsFromServer) {
-                    ejectedPilotInfo.coordinates.lat += SHIFT_NORTH;
-                }
-            }
+
+            ResponseEntity<List<EjectedPilotInfo>> responseEntity = getServerData();
+            List<EjectedPilotInfo> ejectionsFromServer = responseEntity.getBody();
+            ejectionsFromServer = updateLatitude(ejectionsFromServer);
+
             List<EjectedPilotInfo> updatedEjections = ejectionsFromServer;
             List<EjectedPilotInfo> previousEjections = dataBase.getAllOfType(EjectedPilotInfo.class);
 
