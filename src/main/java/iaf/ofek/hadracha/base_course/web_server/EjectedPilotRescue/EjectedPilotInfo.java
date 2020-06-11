@@ -22,7 +22,7 @@ public class EjectedPilotInfo implements Entity<EjectedPilotInfo> {
 
     @Override
     public int getId() {
-        return id;
+        return this.id;
     }
 
     @Override
