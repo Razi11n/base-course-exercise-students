@@ -28,10 +28,10 @@ public class EjectionsRestControl {
     public void TakeResponsibility(@CookieValue (value = "client-id") String clientId, @RequestParam int ejectionId) {
         EjectedPilotInfo ejectedPilotInfo = inMemoryMapDataBase.getByID(ejectionId, EjectedPilotInfo.class);
 
-        ejectedPilotInfo.rescuedBy = (ejectedPilotInfo.rescuedBy == null) ? clientId : ejectedPilotInfo.rescuedBy;
-
-        airplanesAllocationManager.allocateAirplanesForEjection(ejectedPilotInfo, clientId);
-        
-        inMemoryMapDataBase.update(ejectedPilotInfo);
+        if (ejectedPilotInfo.rescuedBy == null) {
+            ejectedPilotInfo.rescuedBy = clientId;
+            inMemoryMapDataBase.update(ejectedPilotInfo);
+            airplanesAllocationManager.allocateAirplanesForEjection(ejectedPilotInfo, clientId);
+        }
     }
 }
